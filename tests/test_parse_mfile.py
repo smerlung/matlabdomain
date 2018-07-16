@@ -297,7 +297,7 @@ def test_ClassWithErrors(caplog):
     records = caplog.record_tuples
     assert records == [
         ('sphinx.matlab-domain', WARNING,
-         '[sphinxcontrib-matlabdomain] Parsing failed in test_data.ClassWithErrors.'),
+         '[sphinxcontrib-matlabdomain] Parsing failed in test_data.ClassWithErrors. Check if valid MATLAB code.'),
     ]
 
 if __name__ == '__main__':
