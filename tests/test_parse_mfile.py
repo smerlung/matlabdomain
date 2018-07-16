@@ -130,6 +130,15 @@ def test_no_spaces():
     assert obj.docstring == " Tests a function with no spaces in function signature\n"
 
 
+def test_with_tabs():
+    mfile = os.path.join(TESTDATA_SUB, 'f_with_tabs.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'f_with_tabs', '')
+    assert obj.name == 'f_with_tabs'
+    assert obj.retv == ['y']
+    assert obj.args == ['x']
+    assert obj.docstring == " A function with tabs\n"
+
+
 def test_ClassWithEndOfLineComment():
     mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithEndOfLineComment.m')
     obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithEndOfLineComment', 'test_data')
@@ -253,7 +262,8 @@ def test_ClassWithBuiltinOverload():
     assert obj.name == 'ClassWithBuiltinOverload'
     assert obj.docstring == " Class that overloads a builtin\n"
 
-@pytest.mark.skip("wont catch warning if other tests have run.")
+
+@pytest.mark.xfail
 def test_f_with_name_mismatch(caplog):
     from logging import WARNING
     caplog.clear()
@@ -273,6 +283,22 @@ def test_ClassWithFunctionVariable():
     assert obj.docstring == " This line contains functions!\n"
     assert list(obj.methods.keys()) == ['ClassWithFunctionVariable']
 
+
+def test_f_inputargs_error():
+    mfile = os.path.join(DIRNAME, 'test_data', 'f_inputargs_error.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'f_inputargs_error', 'test_data')
+
+
+def test_ClassWithErrors(caplog):
+    from logging import WARNING
+    caplog.clear()
+    mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithErrors.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithErrors', 'test_data')
+    records = caplog.record_tuples
+    assert records == [
+        ('sphinx.matlab-domain', WARNING,
+         '[sphinxcontrib-matlabdomain] Parsing failed in test_data.ClassWithErrors.'),
+    ]
 
 if __name__ == '__main__':
     pytest.main([os.path.abspath(__file__)])
