@@ -289,6 +289,7 @@ def test_f_inputargs_error():
     obj = mat_types.MatObject.parse_mfile(mfile, 'f_inputargs_error', 'test_data')
 
 
+@pytest.mark.xfail
 def test_ClassWithErrors(caplog):
     from logging import WARNING
     caplog.clear()
