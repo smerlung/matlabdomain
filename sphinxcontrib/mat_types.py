@@ -524,26 +524,12 @@ class MatFunction(MatObject):
             # function [output] = name(inputs)
             # % docstring
             # =====================================================================
-            # check function keyword
-            func_kw = tks.pop()  # function keyword
-            if func_kw[0] is not Token.Keyword or func_kw[1].strip() != 'function':
-                raise TypeError('Object is not a function. Expected a function.'
-                                'modname: {}, name: {}'.format(modname, name))
-                # TODO: what is a better error here?
-            # skip blanks and tabs
+            # Skip function token - already checked in MatObject.parse_mfile
+            tks.pop()
             skip_whitespace(tks)
-            # whitespace = tks.pop()[0]
-            # if whitespace is not Token.Text.Whitespace:  # @UndefinedVariable
-            #     # When the input args are wrong parsed,
-            #     # the whitespace is not makred as (Token.Text, ' ')
-            #     # This hides a bug, when "..." are in the input args
-            #     if whitespace[1] != ' ':
-            #         raise TypeError('Expected a whitespace after function keyword.'
-            #                         'modname: {}, name: {}'.format(modname, name))
-            #         # TODO: what is a better error here?
-            # =====================================================================
-            # output args
-            retv = tks.pop()  # return values
+
+            #  Check for return values
+            retv = tks.pop()
             if retv[0] is Token.Text:
                 self.retv = [rv.strip() for rv in retv[1].strip('[ ]').split(',')]
                 if len(self.retv) == 1:
@@ -555,11 +541,13 @@ class MatFunction(MatObject):
                         self.retv = [rv for rv_tab in self.retv[0].split('\t')
                                      for rv in rv_tab.split(' ')]
                 if tks.pop() != (Token.Punctuation, '='):
-                    raise TypeError('Token after outputs should be Punctuation.'
-                                    'modname: {}, name: {}'.format(modname, name))
-                    # TODO: raise an matlab token error or what?
+                    # Unlikely to end here. But never-the-less warn!
+                    msg = '[sphinxcontrib-matlabdomain] Parsing failed in {}.{}. Expected "=".'.format(modname, name)
+                    logger.warning(msg)
+                    return
+
                 skip_whitespace(tks)
-            elif retv[0] is Token.Name.Function:  # @UndefinedVariable
+            elif retv[0] is Token.Name.Function:
                 tks.append(retv)
             # =====================================================================
             # function name
@@ -572,9 +560,6 @@ class MatFunction(MatObject):
                     msg += ' Expected "{}" in module "{}".'.format(name, modname)
                     logger.warning(msg)
 
-                    #raise Exception(errmsg)
-                    return
-                    # TODO: create mat_types or tokens exceptions!
             # =====================================================================
             # input args
             if tks.pop() == (Token.Punctuation, '('):
@@ -583,18 +568,15 @@ class MatFunction(MatObject):
                     self.args = [arg.strip() for arg in args[1].split(',')]\
                 # no arguments given
                 elif args == (Token.Punctuation, ')'):
-                    tks.append(args)  # put closing parenthesis back in stack
+                    # put closing parenthesis back in stack
+                    tks.append(args)
                 # check if function args parsed correctly
                 if tks.pop() != (Token.Punctuation, ')'):
-                    raise TypeError('Token after outputs should be Punctuation.'
-                                    'modname: {}, name: {}'.format(modname, name))
-                    # TODO: raise an matlab token error or what?
-                elif args[0] is Token.Name:
-                    raise TypeError('Expected input args. '
-                                    'Probably  there is a not allowed "..." in '
-                                    'the input args? '
-                                    'modname: {}, name: {}, func name: {}'.format(
-                                        modname, name, self.name))
+                    # Unlikely to end here. But never-the-less warn!
+                    msg = '[sphinxcontrib-matlabdomain] Parsing failed in {}.{}. Expected ")".'.format(modname, name)
+                    logger.warning(msg)
+                    return
+
             skip_whitespace(tks)
             # =====================================================================
             # docstring
@@ -734,26 +716,18 @@ class MatClass(MatMixin, MatObject):
         # TODO: use generator and next() instead of stepping index!
 
         try:
-            idx = 0  # token index
-            # check classdef keyword
-            if self._tk_ne(idx, (Token.Keyword, 'classdef')):
-                raise TypeError('Object is not a class. Expected a class.')
-            idx += 1
-            # TODO: allow continuation dots "..." in signature
-            # parse classdef signature
-            # classdef [(Attributes [= true], Attributes [= {}] ...)] name ...
-            #   [< bases & ...]
-            # % docstring
-            # =====================================================================
+            # Skip classdef token - already checked in MatObject.parse_mfile
+            idx = 1  # token index
+
             # class "attributes"
             self.attrs, idx = self.attributes(idx, MatClass.cls_attr_types)
             # =====================================================================
             # classname
             idx += self._blanks(idx)  # skip blanks
             if self._tk_ne(idx, (Token.Name, self.name)):
-                errmsg = 'Unexpected class name: "%s".' % self.tokens[idx][1]
-                raise Exception(errmsg)
-                # TODO: create exception classes
+                msg = '[sphinxcontrib-matlabdomain] Unexpected class name: "%s".' % self.tokens[idx][1]
+                msg += ' Expected "{0}" in "{1}.{0}".'.format(name, modname)
+                logger.warning(msg)
             idx += 1
             idx += self._blanks(idx)  # skip blanks
             # =====================================================================
@@ -862,7 +836,9 @@ class MatClass(MatMixin, MatObject):
                             idx += 1
                             continue
                         else:
-                            raise TypeError('Expected property - got %s' % str(self.tokens[idx]))
+                            msg = '[sphinxcontrib-matlabdomain] Expected property - got %s' % str(self.tokens[idx])
+                            logger.warning(msg)
+                            return
                         idx += self._blanks(idx)  # skip blanks
                         # =========================================================
                         # defaults
@@ -1005,10 +981,12 @@ class MatClass(MatMixin, MatObject):
                 if k is Token.Name and attr_name in attr_types:
                     attr_dict[attr_name] = True  # add attibute to dictionary
                     idx += 1
-                else:
-                    errmsg = 'Unexpected attribute: "%s".' % str(self.tokens[idx])
-                    raise Exception(errmsg)
-                    # TODO: make matlab exception
+                elif k is Token.Name:
+                    msg = '[sphinxcontrib-matlabdomain] Unexpected class attribute: "%s".' % str(self.tokens[idx][1])
+                    msg += ' In "{0}.{1}".'.format(self.module, self.name)
+                    logger.warning(msg)
+                    idx += 1
+
                 idx += self._blanks(idx)  # skip blanks
                 # continue to next attribute separated by commas
                 if self._tk_eq(idx, (Token.Punctuation, ',')):

@@ -263,6 +263,7 @@ def test_ClassWithBuiltinOverload():
     assert obj.docstring == " Class that overloads a builtin\n"
 
 
+# Fails when running with other test files. Warnings are already logged.
 @pytest.mark.xfail
 def test_f_with_name_mismatch(caplog):
     from logging import WARNING
@@ -289,6 +290,7 @@ def test_f_inputargs_error():
     obj = mat_types.MatObject.parse_mfile(mfile, 'f_inputargs_error', 'test_data')
 
 
+# Fails when running with other test files. Warnings are already logged.
 @pytest.mark.xfail
 def test_ClassWithErrors(caplog):
     from logging import WARNING
@@ -299,6 +301,53 @@ def test_ClassWithErrors(caplog):
     assert records == [
         ('sphinx.matlab-domain', WARNING,
          '[sphinxcontrib-matlabdomain] Parsing failed in test_data.ClassWithErrors. Check if valid MATLAB code.'),
+    ]
+
+
+def test_ClassWithLineContinuation():
+    mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithLineContinuation.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithLineContinuation', 'test_data')
+    assert isinstance(obj, mat_types.MatClass)
+    assert obj.name == 'ClassWithLineContinuation'
+
+
+# Fails when running with other test files. Warnings are already logged.
+@pytest.mark.xfail
+def test_ClassWithNameMismatch(caplog):
+    from logging import WARNING
+    caplog.clear()
+    mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithNameMismatch.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithNameMismatch', 'test_data')
+    assert isinstance(obj, mat_types.MatClass)
+    records = caplog.record_tuples
+    assert records == [
+        ('sphinx.matlab-domain', WARNING,
+         '[sphinxcontrib-matlabdomain] Unexpected class name: "ClassWithMismatch". Expected "ClassWithNameMismatch" in "test_data.ClassWithNameMismatch".'),
+    ]
+
+
+def test_ClassWithAttributes():
+    mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithAttributes.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithAttributes', 'test_data')
+    assert isinstance(obj, mat_types.MatClass)
+    assert obj.name == 'ClassWithAttributes'
+    assert obj.attrs == {'Sealed': True}
+
+
+# Fails when running with other test files. Warnings are already logged.
+@pytest.mark.xfail
+def test_ClassWithUnknownAttributes(caplog):
+    from logging import WARNING
+    caplog.clear()
+    mfile = os.path.join(DIRNAME, 'test_data', 'ClassWithUnknownAttributes.m')
+    obj = mat_types.MatObject.parse_mfile(mfile, 'ClassWithUnknownAttributes', 'test_data')
+    assert isinstance(obj, mat_types.MatClass)
+    assert obj.name == 'ClassWithUnknownAttributes'
+    assert list(obj.methods.keys()) == ['ClassWithUnknownAttributes']
+    records = caplog.record_tuples
+    assert records == [
+        ('sphinx.matlab-domain', WARNING,
+         '[sphinxcontrib-matlabdomain] Unexpected class attribute: "Unknown". In "test_data.ClassWithUnknownAttributes".'),
     ]
 
 if __name__ == '__main__':
