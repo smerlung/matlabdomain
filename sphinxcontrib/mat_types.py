@@ -54,18 +54,9 @@ class MatObject(object):
     :class:`MatFunction` and :class:`MatClass` must begin with either
     ``function`` or ``classdef`` keywords.
     """
-
-    @staticmethod
-    def dbg(msg, *args):
-        """
-        Alternate for sphinx_dbg for test-mode.
-        """
-        print('\t<test-mode>\n' + msg % args)
-
     basedir = None
     sphinx_env = None
     sphinx_app = None
-    sphinx_dbg = dbg
 
     def __init__(self, name):
         #: name of MATLAB object
@@ -956,9 +947,8 @@ class MatClass(MatMixin, MatObject):
                             self._tk_eq(idx, (Token.Punctuation, '(')) or
                             self._tk_eq(idx, (Token.Punctuation, ')')) or
                             self._tk_eq(idx, (Token.Punctuation, ','))):
-                            msg = ['[%s] Skipping tokens for methods defined in separate files.',
-                                   'token #%d: %r']
-                            MatClass.sphinx_dbg('\n'.join(msg), MAT_DOM, idx, self.tokens[idx])
+                            msg = '[%s] Skipping tokens for methods defined in separate files.\ntoken #%d: %r'
+                            logger.debug(msg, MAT_DOM, idx, self.tokens[idx])
                             idx += 1 + self._whitespace(idx + 1)
                         elif self._tk_eq(idx, (Token.Keyword, 'end')):
                             idx += 1
