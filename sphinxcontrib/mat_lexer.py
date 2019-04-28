@@ -117,7 +117,8 @@ class MatlabLexer(RegexLexer):
             (r'.', Text),
         ],
         'string': [
-            (r'[^\']*\'', String, '#pop')
+            (r'[^\']*\'', String, '#pop'),
+            (r'[^\"]*\"', String, '#pop')
         ],
         'blockcomment': [
             (r'^\s*%\}', Comment.Multiline, '#pop'),
