@@ -12,7 +12,7 @@
 import re
 
 from pygments.lexer import Lexer, RegexLexer, bygroups, words, do_insertions
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
+from pygments.token import Token, Text, Comment, Operator, Keyword, Name, String, \
     Number, Punctuation, Generic, Whitespace
 
 from pygments.lexers import _scilab_builtins
@@ -79,12 +79,12 @@ class MatlabLexer(RegexLexer):
             (r'^!.*', String.Other),
             (r'%\{\s*\n', Comment.Multiline, 'blockcomment'),
             (r'%.*$', Comment),
-            (r'^\s*function', Keyword, 'deffunc'),
+            (r'^\s*function(?=[\s[])', Keyword, 'deffunc'),
 
             # from 'iskeyword' on version 7.11 (R2010):
             (words((
                 'break', 'case', 'catch', 'classdef', 'continue', 'else', 'elseif',
-                'end', 'enumerated', 'events', 'for', 'function', 'global', 'if',
+                'end', 'enumerated', 'events', 'for', 'global', 'if',
                 'methods', 'otherwise', 'parfor', 'persistent', 'properties',
                 'return', 'spmd', 'switch', 'try', 'while'), suffix=r'\b'),
              Keyword),
@@ -112,6 +112,7 @@ class MatlabLexer(RegexLexer):
             (r'\d+', Number.Integer),
 
             (r'(?<![\w)\].])\'', String, 'string'),
+            (r'(?<![\w)\].])\"', String, 'string'),
             (r'[a-zA-Z_]\w*', Name),
             (r'.', Text),
         ],
