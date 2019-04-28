@@ -954,6 +954,12 @@ class MatClass(MatMixin, MatObject):
                     idx += 1
 
                 idx += self._blanks(idx)  # skip blanks
+
+                # Continue if attribute is assigned a boolean value
+                if self.tokens[idx][0] == Token.Name.Builtin:
+                    idx += 1
+                    continue
+
                 # continue to next attribute separated by commas
                 if self._tk_eq(idx, (Token.Punctuation, ',')):
                     idx += 1
