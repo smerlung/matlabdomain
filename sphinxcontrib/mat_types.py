@@ -8,8 +8,7 @@
     :copyright: Copyright 2014 Mark Mikofski
     :license: BSD, see LICENSE for details.
 """
-from __future__ import unicode_literals, print_function
-# from builtins import *
+from __future__ import unicode_literals
 from io import open  # for opening files with encoding in Python 2
 import os
 import re
