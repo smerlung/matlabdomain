@@ -222,6 +222,7 @@ class MatlabDocumenter(PyDocumenter):
             # safe_getmembers() uses dir() which pulls in members from all
             # base classes
             members = safe_getmembers(self.object, attr_getter=self.get_attr)
+            members = members[3][1].items()
         else:
             # __dict__ contains only the members directly defined in
             # the class (but get them via getattr anyway, to e.g. get
