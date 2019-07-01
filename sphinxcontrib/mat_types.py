@@ -719,6 +719,11 @@ class MatClass(MatMixin, MatObject):
                     if self._tk_ne(idx, (Token.Text, '\n')):
                         idx += 1
                     if base_name:
+                        split = base_name.split('.')
+                        for i in range(0, len(split) - 1):
+                            split[i] = '+' + split[i]
+
+                        base_name = '.'.join(split)
                         self.bases.append(base_name)
                     idx += self._blanks(idx)  # skip blanks
                     # continue to next super class separated by &
